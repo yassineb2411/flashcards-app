@@ -1,70 +1,42 @@
 <script>
-  export let word = '';  // Mot à afficher
-  export let definitions = [];  // Définitions à afficher
-  let isFlipped = false;  // Contrôle pour savoir si la carte est retournée
-  function toggleFlip(event) {
-    if (event.type === 'click' || event.key === 'Enter' || event.key === ' ') {
-      isFlipped = !isFlipped;
-    }
+  export let word;
+  export let definitions;
+  export let selectedDefinitions;  // Tableau pour gérer l'état des cases à cocher
+  export let onValidate;  // Fonction pour valider
+
+  // Fonction pour enregistrer les données dans localStorage
+  function saveToMemory() {
+    const selectedDefs = definitions.filter((_, index) => selectedDefinitions[index]); // Filtre les définitions sélectionnées
+    const storedMemory = localStorage.getItem('memory');
+    const memory = storedMemory ? JSON.parse(storedMemory) : {};  // Si 'memory' existe, on le charge, sinon on crée un objet vide
+
+    memory[word] = selectedDefs;  // On associe les définitions sélectionnées au mot actuel
+    localStorage.setItem('memory', JSON.stringify(memory));  // On enregistre les données dans le localStorage
+    console.log("Données enregistrées dans la mémoire", memory); // Pour vérifier
+  }
+
+  // Appel de saveToMemory lors de la validation
+  function handleValidation() {
+    saveToMemory();  // Sauvegarde les données
+    console.log("Données sauvegardées pour le mot", word);
   }
 </script>
 
-<div 
-  class="flashcard" 
-  role="button" 
-  tabindex="0"  
-  on:click={toggleFlip}
-  on:keydown={toggleFlip}  
-  aria-pressed={isFlipped ? 'true' : 'false'}  
->
-  <div class="card">
-    {#if isFlipped}
-      <ul>
-        {#each definitions as definition}
-          <li>{definition}</li>
-        {/each}
-      </ul>
-    {:else}
-      <p>{word}</p>
-    {/if}
-  </div>
+<!-- Contenu de la carte -->
+<div>
+  <h3>Définitions pour le mot : {word}</h3>
+
+  {#each definitions as def, index}
+    <div>
+      <!-- Liaison directe entre la case à cocher et le tableau `selectedDefinitions` -->
+      <input
+        type="checkbox"
+        id={"def-" + index}
+        bind:checked={selectedDefinitions[index]}  
+      />
+      <label for={"def-" + index}>{def}</label>
+    </div>
+  {/each}
+
+  <button on:click={onValidate}>Valider</button>
 </div>
-
-<style>
-  .flashcard {
-    cursor: pointer;
-    width: 200px;
-    height: 300px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #fff;
-    transition: transform 0.5s;
-    transform-style: preserve-3d;
-  }
-
-  .card {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backface-visibility: hidden;
-  }
-
-  .card p {
-    font-size: 24px;
-  }
-
-  .card ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .card li {
-    font-size: 18px;
-  }
-</style>
